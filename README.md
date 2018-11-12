@@ -28,3 +28,5 @@ new Skroll({
 Check out more about this plugin and [examples here](http://akzhy.com/portfolio/skroll). 
 
 Check live demo [here](http://akzhy.com/demos/skroll).
+
+[Codepen Demo](https://codepen.io/akzhy/pen/YRpVvM)
