@@ -79,6 +79,8 @@ Sample:
 
 Used to recalculate the position of elements in case of height changes that occur due to addition or loading of elements. It is recommended to call this method during window load or in an interval.
 
+---
+
 By default the animations will be disabled on mobile devices to improve performance. To allow this in mobile devices, simply pass the argument as follows.
 
 ```javascript
