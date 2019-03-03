@@ -5,6 +5,7 @@ Skroll = function(opt){
 	this.settings.mobile = this.settings.mobile === undefined ? false : this.settings.mobile;
 	this.referenceElement = this.settings.reference === undefined ? window : this.get(this.settings.reference)[0];
     this.elements = [];
+	this.data = {};
 
     this.animations = {
         zoomIn:{
@@ -190,14 +191,14 @@ Skroll.prototype.inViewport = function(elem,settings){
 	var scrollTop,elementTop,elementBottom,viewportTop,viewportBottom;
 	if(this.referenceElement == window){
 		scrollTop = (window.pageYOffset || document.documentElement.scrollTop)  - (document.documentElement.clientTop || 0);
-		elementTop = JSON.parse(elem.getAttribute("data-skroll-offset")).top;
+		elementTop = this.data[elem.getAttribute("data-skroll-id")].top;
 		elementBottom = elementTop + elem.offsetHeight;
 		viewportTop = scrollTop + screen.availHeight*settings.triggerTop;
 		viewportBottom = scrollTop + screen.availHeight*settings.triggerBottom;
 	}else{
 		var re = this.referenceElement;
 		scrollTop = re.scrollTop;
-		elementTop = JSON.parse(elem.getAttribute("data-skroll-offset")).top;
+		elementTop = this.data[elem.getAttribute("data-skroll-id")].top;
 		elementBottom = elementTop + elem.offsetHeight;
 		viewportTop = scrollTop + re.offsetHeight*settings.triggerTop;
 		viewportBottom = scrollTop + re.offsetHeight*settings.triggerBottom;
@@ -206,17 +207,17 @@ Skroll.prototype.inViewport = function(elem,settings){
 }
 Skroll.prototype.getScrollStatus = function(elem,settings){
 	if(this.inViewport(elem,settings)){
-		elem.setAttribute("data-skroll-inview",true);
-		return {action:"enter",data:{shown:elem.getAttribute("data-skroll-shown")}};
+		this.data[elem.getAttribute("data-skroll-id")].inView = true;
+		return {action:"enter",data:{shown:this.data[elem.getAttribute("data-skroll-id")].shown}};
 	}else{
 		if(elem.getAttribute("data-skroll-inview") == "true"){
-			elem.setAttribute("data-skroll-inview",false);
-			return {action:"leave",data:{shown:elem.getAttribute("data-skroll-shown")}};;
+			this.data[elem.getAttribute("data-skroll-id")].inView = false;
+			return {action:"leave",data:{shown:this.data[elem.getAttribute("data-skroll-id")].shown}};
 		}
-		return {action:"idle",data:{shown:elem.getAttribute("data-skroll-shown")}};
+		return {action:"idle",data:{shown:this.data[elem.getAttribute("data-skroll-id")].shown}};
 	}
 }
-Skroll.prototype.add = function(el,options){
+Skroll.prototype.add = function(el,options = {}){
 	var settings = {
 		triggerTop:options.triggerTop || .2,
 		triggerBottom:options.triggerBottom || .8,
@@ -239,14 +240,14 @@ Skroll.prototype.recalcPosition = function(){
 	var _this = this;
 	this.elements.forEach(function(val,key){
 		_this.get(val.element).forEach(function(e,i){
-			if(e.getAttribute("data-skroll-shown") == "false"){
-				var t = e.style.transform;
-				e.style["transform"] = "none";
+			var t = e.style.transform;
+			e.style["transform"] = "none";
+			setTimeout(function(){
 				var offset = e.getBoundingClientRect();
 				var top = _this.referenceElement == window ? offset.top + _this.referenceElement.scrollY : offset.top + _this.referenceElement.scrollTop;
-				e.setAttribute("data-skroll-offset",JSON.stringify({top:top}));
+				_this.data[e.getAttribute("data-skroll-id")].top = top;
 				e.style["transform"] = t;
-			}
+			},50);
 		})
 	})
 }
@@ -276,13 +277,16 @@ Skroll.prototype.addAnimation = function(name,property){
 Skroll.prototype.init = function(){
 	var _this = this;
 	if(!this.settings.mobile && screen.width < 600) return this;
+	var id = 0;
 	this.elements.forEach(function(val,key){
 		_this.get(val.element).forEach(function(e,i){
+			e.setAttribute("data-skroll-id",id);
 			var offset = e.getBoundingClientRect();
 			var top = _this.referenceElement == window ? offset.top + _this.referenceElement.scrollY : offset.top + _this.referenceElement.scrollTop;
-			e.setAttribute("data-skroll-inview",false);
-			e.setAttribute("data-skroll-shown",false);
-			e.setAttribute("data-skroll-offset",JSON.stringify({top:top}));
+			_this.data[e.getAttribute("data-skroll-id")] = {};
+			_this.data[e.getAttribute("data-skroll-id")].inView = false;
+			_this.data[e.getAttribute("data-skroll-id")].shown = false;
+			_this.data[e.getAttribute("data-skroll-id")].top = top;
 			if(typeof(val.settings.animation) == "string" && val.settings.animation != "none"){
 				if(!_this.animations[val.settings.animation]){
 					console.warn("The requested animation '%s' was not found switching to default zoomIn",val.settings.animation);
@@ -295,21 +299,23 @@ Skroll.prototype.init = function(){
 					val.settings.animation.start(e);
 				}
 			}
+			id++;
 		})
 	});
-	['scroll','resize'].forEach(function(e){
-		_this.referenceElement.addEventListener(e,_this.throttle(function(){
+	['scroll','resize'].forEach(function(event){
+		_this.referenceElement.addEventListener(event,_this.throttle(function(){
 			_this.elements.forEach(function(val,key){
 				var tDelay = val.settings.wait;
 				_this.get(val.element).forEach(function(e,i){
 					var sStat = _this.getScrollStatus(e,val.settings);
+
 					if(sStat.action == "idle") return;
-					if(sStat.action == "enter" && (sStat.data.shown == "false")){
+					if(sStat.action == "enter" && (!sStat.data.shown)){
 						if(typeof(val.settings.animation) == "string" && val.settings.animation != "none"){
 							e.style["transition"] = "all "+val.settings.duration+"ms "+val.settings.easing;
 							setTimeout(function(){
 								_this.animations[val.settings.animation].end(e);
-								e.setAttribute("data-skroll-shown",true);
+								_this.data[e.getAttribute("data-skroll-id")].shown = true;
 								tDelay+= val.settings.delay*i;
 							},tDelay)
 						}else if(typeof(val.settings.animation) == "object"){
@@ -317,7 +323,7 @@ Skroll.prototype.init = function(){
 								e.style["transition"] = "all "+val.settings.duration+"ms "+val.settings.easing;
 								setTimeout(function(){
 									val.settings.animation.end(e);
-									e.setAttribute("data-skroll-shown",true);
+									_this.data[e.getAttribute("data-skroll-id")].shown = true;
 									tDelay+= val.settings.delay*i;
 								},tDelay)
 							}
@@ -331,7 +337,7 @@ Skroll.prototype.init = function(){
 									e.style["transition"] = "all "+val.settings.duration+"ms "+val.settings.easing;
 									setTimeout(function(){
 										_this.animations[val.settings.animation].end(e);
-										e.setAttribute("data-skroll-shown",false);
+										_this.data[e.getAttribute("data-skroll-id")].shown = false;
 										tDelay+= val.settings.delay*i;
 									},tDelay)
 								}
@@ -340,7 +346,7 @@ Skroll.prototype.init = function(){
 									e.style["transition"] = "all "+val.settings.duration+"ms "+val.settings.easing;
 									setTimeout(function(){
 										val.settings.animation.end(e);
-										e.setAttribute("data-skroll-shown",false);
+										_this.data[e.getAttribute("data-skroll-id")].shown = false;
 										tDelay+= val.settings.delay*i;
 									},tDelay)
 								}
@@ -355,7 +361,7 @@ Skroll.prototype.init = function(){
 					}
 				})
 			})
-			if(e == 'resize') _this.recalcPosition();
+			if(event == 'resize') _this.recalcPosition();
 		},150));
 	})
 	if(window.dispatchEvent){
