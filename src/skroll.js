@@ -210,7 +210,7 @@ Skroll.prototype.getScrollStatus = function(elem,settings){
 		this.data[elem.getAttribute("data-skroll-id")].inView = true;
 		return {action:"enter",data:{shown:this.data[elem.getAttribute("data-skroll-id")].shown}};
 	}else{
-		if(elem.getAttribute("data-skroll-inview") == "true"){
+		if(this.data[elem.getAttribute("data-skroll-id")].inView){
 			this.data[elem.getAttribute("data-skroll-id")].inView = false;
 			return {action:"leave",data:{shown:this.data[elem.getAttribute("data-skroll-id")].shown}};
 		}
@@ -287,6 +287,8 @@ Skroll.prototype.init = function(){
 			_this.data[e.getAttribute("data-skroll-id")].inView = false;
 			_this.data[e.getAttribute("data-skroll-id")].shown = false;
 			_this.data[e.getAttribute("data-skroll-id")].top = top;
+			_this.data[e.getAttribute("data-skroll-id")].oef = false;
+			_this.data[e.getAttribute("data-skroll-id")].olf = false;
 			if(typeof(val.settings.animation) == "string" && val.settings.animation != "none"){
 				if(!_this.animations[val.settings.animation]){
 					console.warn("The requested animation '%s' was not found switching to default zoomIn",val.settings.animation);
@@ -308,7 +310,6 @@ Skroll.prototype.init = function(){
 				var tDelay = val.settings.wait;
 				_this.get(val.element).forEach(function(e,i){
 					var sStat = _this.getScrollStatus(e,val.settings);
-
 					if(sStat.action == "idle") return;
 					if(sStat.action == "enter" && (!sStat.data.shown)){
 						if(typeof(val.settings.animation) == "string" && val.settings.animation != "none"){
@@ -329,7 +330,6 @@ Skroll.prototype.init = function(){
 							}
 						}
 						tDelay+= val.settings.delay;
-
 					}else if(sStat.action == "leave" && sStat.data.shown){
 						if(val.settings.repeat){
 							if(typeof(val.settings.animation) == "string" && val.settings.animation != "none"){
@@ -355,9 +355,19 @@ Skroll.prototype.init = function(){
 						}
 					}
 					if(sStat.action == "enter"){
-						if(val.settings.onEnter) val.settings.onEnter(i,e);
+						if(!_this.data[e.getAttribute("data-skroll-id")].oef){
+							if(val.settings.onEnter){
+								val.settings.onEnter(i,e);
+								_this.data[e.getAttribute("data-skroll-id")].oef = true;
+							}
+						}
 					}else if(sStat.action == "leave"){
-						if(val.settings.onLeave) val.settings.onLeave(i,e);
+						if(!_this.data[e.getAttribute("data-skroll-id")].olf){
+							if(val.settings.onLeave) {
+								val.settings.onLeave(i,e);
+								_this.data[e.getAttribute("data-skroll-id")].olf = true;
+							};
+						}
 					}
 				})
 			})
