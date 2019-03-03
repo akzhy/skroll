@@ -1,4 +1,5 @@
 # skroll
+![](https://img.shields.io/badge/skroll.js-2.0.1-brightgreen.svg) ![](https://img.shields.io/badge/License-MIT-blue.svg) [![Paypal Donate](https://img.shields.io/badge/Donate-paypal-9c27b0.svg)](https://www.paypal.me/akzhy/10)
 Skroll is a javascript library that can create beautiful animations on scroll.
 
 ## Usage
