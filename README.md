@@ -1,15 +1,10 @@
 # skroll
-Skroll is a JQuery plugin / javascript library that can create beautiful animations on scroll.
+Skroll is a javascript library that can create beautiful animations on scroll.
 
 ## Usage
+*As of v2.0.0, the jquery plugin has been deprecated.*
 
-For the JQuery plugin,
-Include JQuery first and then include the file as follows.
-```html
-<script src="jquery.min.js" type="text/javascript"></script>
-<script src="skroll.jquery.min.js" type="text/javascript"></script>
-```
-For Vanilla js, simply include the script
+Simply include the script
 ```html
 <script src="skroll.min.js" type="text/javascript"></script>
 ```
@@ -53,23 +48,14 @@ Sample:
 .addAnimation("customAnimation",{
     start:function(el){
         /*
-        
-        If vanilla javascript,
-        
+        JQuery can also be used
+        */
         el.style["transform"] = "scale(.1,.1)";
         el.style["opacity"] = 0;
-        
-        */
-        $(el).css({
-             transform:"scale(.1,.1)",
-             opacity:0
-         });
      },
      end:function(el){
-        $(el).css({
-             transform:"scale(1,1)",
-             opacity:1
-         })
+        el.style["transform"] = "scale(1,1)";
+        el.style["opacity"] = 1;
      }
 })
 ```
@@ -98,6 +84,5 @@ new Skroll({
 ```
 Check out more about this plugin and [examples here](http://akzhy.com/shelf/skroll). 
 
-Check live demo [here](http://akzhy.com/demos/skroll).
+[Live Demo 1](http://demos.akzhy.com/skroll/skroll-demo-1/) | [Live Demo 2](http://demos.akzhy.com/skroll/skroll-demo-2/)
 
-[Codepen Demo](https://codepen.io/akzhy/pen/YRpVvM)

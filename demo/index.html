@@ -22,7 +22,6 @@
 	.container{
 		width:80%;
 		margin:0 auto;
-		height:100vh;
 		overflow-x:hidden;
 	}
 	.box{
@@ -178,9 +177,7 @@
 		<div class="box w5 h5 anim8 grey"></div>
 	</div>
 	<script>
-		var skroll = new Skroll({
-		reference:".container"
-		})
+		var skroll = new Skroll()
 			.add(".header",{
 				animation:"zoomIn",
 				duration:600
@@ -216,7 +213,7 @@
 				animation:"growInRight",
 				delay:80,
 				duration:500,
-				easing:"cubic-bezier(0.37, 0.27, 0.24, 1.26)"
+				easing:"cubic-bezier(0.37, 0.27, 0.24, 1.26)",
 			})
 			.addAnimation("spinIn",{
 				start:function(el){
